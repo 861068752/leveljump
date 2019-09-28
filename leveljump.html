@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>楼层跳跃</title>
+		<style type="text/css">
+			*{
+				padding: 0;
+				margin: 0;
+				list-style: none;
+			}
+			body,html{
+				width: 100%;
+				height: 100%;
+			}
+			.box{
+				width: 100%;
+				position: relative;
+				top: 0;
+				left: 0;
+			}
+			.nav{
+				width: 200px;
+				position: fixed;
+				top: 50px;
+				left: 50px;
+				z-index: 1;
+			}
+			.nav li{
+				width: 100%;
+				height: 100px;
+				text-align: center;
+				line-height: 100px;
+				font-size: 18px;
+				color: white;
+				background: plum;
+				margin-top: 2px;
+				cursor: pointer;
+				transition: all 0.1s; 
+			}
+			.nav li:hover{
+				background: indianred !important;
+				transform: scale(1.05);
+			}
+			.content{
+				width: 100%;
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+			.content li{
+				width: 100%;
+				text-align: center;
+				padding: 50px;
+				font-size: 68px;
+				color: white;
+			}
+			.selectNow{
+				background: indianred !important;
+				transform: scale(1.05);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="box"></div>
+	</body>
+	<script type="text/javascript">
+		var box = document.getElementsByClassName("box")[0];
+		var txts =[
+		    {
+		    	"bg":"red",
+		    	"ds":"蔬菜"
+		    },
+		    {
+		    	"bg":"orange",
+		    	"ds":"肉类"
+		    },
+		    {
+		    	"bg":"yellow",
+		    	"ds":"水果"
+		    },
+		    {
+		    	"bg":"green",
+		    	"ds":"鱼类"
+		    },
+		    {
+		    	"bg":"blue",
+		    	"ds":"零食"
+		    }
+		]
+		function levelJump(obj,data){
+			
+			//创建骨架
+			
+			//创建导航
+			var html = makeNavFrame(data);
+			//创建主体
+			    html+= makeContentFrame(data);
+			obj.innerHTML = html;
+			//设置样式
+			obj.index = 0;
+			makeFrameStyle(obj);
+			selectEvent(obj);
+			jumpEvent(obj);
+			eScroll(obj);
+			
+			
+		}
+		    //创建导航
+		    function makeNavFrame(data){
+		    	var html = '<ul class="nav">';
+		    	for(var i=0;i<data.length;i++){
+		    		if(i==0){
+		    			html += '<li class="selectNow">'+data[i].ds+'</li>';
+		    		}else{
+		    			html += '<li>'+data[i].ds+'</li>';
+		    		}
+		    		
+		    	}   html+='</ul>';
+		    	return html;
+		    }
+		    
+			//创建主体
+			function makeContentFrame(data){
+				var html = '<ul class="content">';
+				for(var i=0;i<data.length;i++){
+					html+= '<li style="background:'+data[i].bg+'">'+data[i].ds+'</li>';
+				}
+				    html+= '</ul>';
+				    return html;
+			}
+			function makeFrameStyle(obj){
+				var navul = obj.children[0];
+				var contentsul = obj.children[1];
+				var lis = contentsul.children;
+				obj.style.height = lis.length*100 + "%";
+				contentsul.style.height = "100%";
+				for(var i=0;i<lis.length;i++){
+					lis[i].style.height = 1/lis.length*100 + "%";
+				}
+			}
+			function selectEvent(obj){
+				var navul = obj.children[0];
+				var lis = navul.children;
+				console.log(lis);
+				for(var i=0;i<lis.length;i++){
+					lis[i].index = i;
+					
+					lis[i].onclick = function(){
+						obj.index = this.index;
+						jumpEvent(obj);
+					}
+				}
+			    }
+			//跳跃事件
+			function jumpEvent(obj){
+				console.log(obj.index);
+				var navul = obj.children[0];
+				var lis = navul.children;
+				var contentsul = obj.children[1];
+				var clis = contentsul.children;
+			    for(var i=0;i<lis.length;i++){
+				lis[i].classList.remove("selectNow");
+				}
+				lis[obj.index].classList.add("selectNow");
+                //contentsul.style.top = -clis[0].offsetHeight*obj.index + "px";
+                var target = clis[obj.index].offsetTop;
+                animation(obj,clis[obj.index].offsetTop);
+                window.getSelection?window.getSelection().removeAllRanges():document.selection.empty();
+			}
+			//缓冲动画
+			function animation(obj,target){
+				clearInterval(obj);
+				obj.timer = setInterval(function(){
+					if(scroll().top == target){
+						clearInterval(obj.timer);
+						return;
+					}
+					var speed = (target - scroll().top)/10;
+					    speed = speed>0?Math.ceil(speed):Math.floor(speed);
+					   window.scrollTo(0,scroll().top+speed);
+				},20)
+				
+				
+			}
+			function scroll(){
+				if(window.pageXOffset){
+					return{
+						top:window.pageYOffset,
+						left:window.pageXOffset
+					}
+				}else if(document.compatMode == "BackCompat"){
+					return{
+						top:document.body.scrollTop,
+						left:document.body.scrollLeft
+					}
+				}else{
+					return{
+						top:document.documentElement.scrollTop,
+						left:document.documentElement.scrollLeft
+					}
+				}
+			}
+			function eScroll(obj){
+		    window.onscroll = function(e){
+		    	
+		    	e.preventDefault();
+		    	var top = scroll().top;
+		    	var h = document.body.offsetHeight;
+		    	console.log(h);
+		    	console.log(top);
+		    	var sum = parseInt(Math.round(top/h));
+		    	obj.index = sum;
+		    	
+		    	var navul = obj.children[0];
+				var lis = navul.children;
+				if(obj.index >=lis.length -1){
+		    		obj.index = lis.length -1;
+		    	}
+		    	for(var i=0;i<lis.length;i++){
+				lis[i].classList.remove("selectNow");
+				}
+				lis[obj.index].classList.add("selectNow");
+		    	
+		    }
+		   }
+			
+		levelJump(box,txts)
+		
+		
+	</script>
+</html>
